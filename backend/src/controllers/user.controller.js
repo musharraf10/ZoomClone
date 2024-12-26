@@ -55,3 +55,6 @@ export const register = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 }
+
+
+//<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
