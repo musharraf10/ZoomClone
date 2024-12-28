@@ -14,18 +14,18 @@ export const login = async (req, res) => {
     try {
         const user = await User.findOne({ userName });
         if(!user){
-            return res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
+            return res.status(httpStatus.NOT_FOUND).json({ message: "Invalid credentials" });
         }
 
         let isMatch = await bcrypt.compare(password, user.password);
         if(isMatch) {
-            console.log('Password match');
+            // console.log('Password match');
             const token = crypto.randomBytes(20).toString('hex');
             user.token = token;
             await user.save();
             return res.status(httpStatus.OK).json({ token });
         } else {
-            console.log('Password does not match');
+            // console.log('Password does not match');
             return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid credentials" });
         }
     }catch(error){
