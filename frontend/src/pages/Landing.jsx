@@ -40,7 +40,7 @@ export default function Landing() {
                 </div>
                 <div>
 
-                    <img src="/image1.png" alt="" />
+                    <img src="/image1.png" alt="Image Loading" />
 
                 </div>
             </div>
