@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import {User} from "../models/user.model.js";
 import bcrypt ,{ hash } from "bcrypt";
 import crypto from "crypto";
+import { Meeting } from "../models/meeting.model.js";
 
 export const login = async (req, res) => {
     const { userName, password } = req.body;
@@ -61,4 +62,36 @@ export const register = async (req, res) => {
 }
 
 
+export const getUserHistory = async (req, res) => {
+    const { token } = req.query;
+
+    try {
+        const user = await User.findOne({ token: token });
+        const meetings = await Meeting.find({ user_id: user.userName })
+        res.json(meetings)
+    } catch (e) {
+        res.json({ message: `Something went wrong ${e}` })
+    }
+}
+
+
+
+export const addToHistory = async (req, res) => {
+    const { token, meeting_code } = req.body;
+
+    try {
+        const user = await User.findOne({ token: token });
+
+        const newMeeting = new Meeting({
+            user_id: user.userName,
+            meeting_code: meeting_code
+        })
+
+        await newMeeting.save();
+
+        res.status(httpStatus.CREATED).json({ message: "Added code to history" })
+    } catch (e) {
+        res.json({ message: `Something went wrong ${e}` })
+    }
+}
 //<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>

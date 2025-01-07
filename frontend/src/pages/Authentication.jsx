@@ -5,11 +5,13 @@ import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
-import Grid2 from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { AuthContext } from '../contexts/AuthContext';
-import { Snackbar } from '@mui/material';
+import { Snackbar, Alert } from '@mui/material';
+import getRandomImage from '../utils/RandomImage.jsx';
+
 
 const defaultTheme = createTheme();
 
@@ -19,11 +21,16 @@ export default function Authentication() {
     const [name, setName] = React.useState('');
     const [error, setError] = React.useState('');
     const [message, setMessage] = React.useState('');
-
     const [formState, setFormState] = React.useState(0);  // 0 -> Login, 1 -> Register
     const [open, setOpen] = React.useState(false);
 
     const { handleRegister, handleLogin } = React.useContext(AuthContext);
+
+    const [randomImage, setRandomImage] = React.useState('');
+
+    React.useEffect(() => {
+        setRandomImage(getRandomImage());
+      }, []); 
 
     let handleAuth = async () => {
         try {
@@ -53,30 +60,28 @@ export default function Authentication() {
     // Clear username, password and name when switching between Sign In and Sign Up
     const handleFormSwitch = (formType) => {
         setFormState(formType);
-        // setUsername('');
         setPassword('');
         setName('');  // Reset name field too for Sign Up
         setError('');  // Clear any previous error messages
     };
 
-     const handleClose = (event, reason) => {
+    const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
             return;
         }
         setOpen(false);  // Close the snackbar
     };
-
     return (
         <ThemeProvider theme={defaultTheme}>
-            <Grid2 container component="main" sx={{ height: '100vh' }}>
+            <Grid container component="main" sx={{ height: '100vh' }}>
                 <CssBaseline />
-                <Grid2
+                <Grid
                     item
                     xs={false}
                     sm={4}
                     md={7}
                     sx={{
-                        backgroundImage: 'url(https://source.unsplash.com/random?wallpapers)',
+                        backgroundImage: `url(${randomImage})`,
                         backgroundRepeat: 'no-repeat',
                         backgroundColor: (t) =>
                             t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900],
@@ -84,7 +89,7 @@ export default function Authentication() {
                         backgroundPosition: 'center',
                     }}
                 />
-                <Grid2 item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
+                <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
                     <Box
                         sx={{
                             my: 8,
@@ -162,15 +167,19 @@ export default function Authentication() {
                             </Button>
                         </Box>
                     </Box>
-                </Grid2>
-            </Grid2>
+                </Grid>
+            </Grid>
 
             <Snackbar
                 open={open}
                 autoHideDuration={4000}  // The snackbar will disappear after 4 seconds
-                message={message}
-                onClose={handleClose}    // Handle close event
-            />
+                onClose={handleClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
+                    {message}
+                </Alert>
+            </Snackbar>
         </ThemeProvider>
     );
 }

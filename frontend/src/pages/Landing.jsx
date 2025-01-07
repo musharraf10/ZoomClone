@@ -1,31 +1,44 @@
 import React from "react";
 import "../App.css";
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom';
+import { useState } from "react";
 
 export default function Landing() {
 
     const router = useNavigate();
+
+    const [toggle, setToggle] = useState(false);
+
+    const toggleMenu = () => {
+        setToggle(!toggle);
+    };
+
     return (
         <div className="LandingPageContainer">
-             <nav>
+             <nav className="NavLanding">
+
                 <div className='navHeader'>
                     <h2>Video Call</h2>
                 </div>
-                <div className='navlist'>
-                    <p onClick={() => {
-                        router("/aljk23")
-                    }}>Join as Guest</p>
+                <div className={`navlist ${toggle ? 'active' : ''}`}>
+                <p onClick={() => {
+                  router("/GuestJoin", { state: { askForUsername: true } });
+                  }}>Join as Guest</p>
+
                     <p onClick={() => {
                         router("/auth")
 
                     }}>Register</p>
-                    <div onClick={() => {
+                    
+                    <p onClick={() => {
                         router("/auth")
 
-                    }} role='button'>
-                        <p>Login</p>
-                    </div>
+                    }}>Login</p>
+                    
                 </div>
+                <button className="toggle-btn" onClick={toggleMenu}>
+                    &#9776;
+             </button>
             </nav>
 
 

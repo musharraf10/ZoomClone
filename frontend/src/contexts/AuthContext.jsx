@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
         try {
             let request = await client.post("/register", {
                 name: name,
-                username: username,
+                userName: username,
                 password: password
             })
 
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
 
             if (request.status === httpStatus.OK) {
                 localStorage.setItem("token", request.data.token);
-                router("/")
+                router("/home")
             }
         } catch (err) {
             throw err;
@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }) => {
         try {
             let request = await client.post("/add_to_activity", {
                 token: localStorage.getItem("token"),
-                meeting_code: meetingCode
+                meeting_code : meetingCode
             });
             return request
         } catch (e) {

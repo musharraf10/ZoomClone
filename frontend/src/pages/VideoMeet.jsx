@@ -3,19 +3,23 @@ import io from "socket.io-client";
 import { Badge, IconButton, TextField } from '@mui/material';
 import { Button } from '@mui/material';
 import VideocamIcon from '@mui/icons-material/Videocam';
-import VideocamOffIcon from '@mui/icons-material/VideocamOff';
-import "../styles/VideoMeet.css";
+import VideocamOffIcon from '@mui/icons-material/VideocamOff'
+import styles from "../styles/VideoMeet.module.css";
 import CallEndIcon from '@mui/icons-material/CallEnd'
 import MicIcon from '@mui/icons-material/Mic'
-import MicOffIcon from '@mui/icons-material/MicOff';
+import MicOffIcon from '@mui/icons-material/MicOff'
 import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
-import ChatIcon from '@mui/icons-material/Chat'
+import ChatIcon from '@mui/icons-material/Chat';
+import HomeIcon from '@mui/icons-material/Home';
+import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
+// import server from '../environment';
 
 const server_url = "http://localhost:8080";
 
-var connections = {};
+const connections = {};
 
 const peerConfigConnections = {
     "iceServers": [
@@ -25,7 +29,10 @@ const peerConfigConnections = {
 
 export default function VideoMeetComponent() {
 
+    const router = useNavigate();
+
     var socketRef = useRef();
+
     let socketIdRef = useRef();
 
     let localVideoref = useRef();
@@ -50,13 +57,22 @@ export default function VideoMeetComponent() {
 
     let [newMessages, setNewMessages] = useState(3);
 
-    let [askForUsername, setAskForUsername] = useState(true);
+    let [askForUsername, setAskForUsername] = useState(false);
+
+    const location = useLocation();
 
     let [username, setUsername] = useState("");
 
     const videoRef = useRef([])
 
-    let [videos, setVideos] = useState([])
+    let [videos, setVideos] = useState([]);
+
+    
+     useEffect(() => {
+            if (location.state?.askForUsername) {
+                setAskForUsername(true);
+            }
+    }, [location]);
 
     // TODO
     // if(isChrome() === false) {
@@ -405,7 +421,7 @@ export default function VideoMeetComponent() {
             let tracks = localVideoref.current.srcObject.getTracks()
             tracks.forEach(track => track.stop())
         } catch (e) { }
-        window.location.href = "/"
+        router("/home");
     }
 
     let openChat = () => {
@@ -440,40 +456,56 @@ export default function VideoMeetComponent() {
     }
 
     
-    let connect = () => {
-        setAskForUsername(false);
-        getMedia();
-    }
+    const [submitted, setSubmitted] = useState(true);
+        let connect = () => {
+            if(!username) return;
+            setAskForUsername(false);
+            setSubmitted(true);
+            getMedia();
+        }
 
 
     return (
         <div>
 
-            {askForUsername === true ?
+            {askForUsername === true ? <div className={styles.UserLobbyContainer}>
+            <HomeIcon className="homeIcon" onClick={() => router("/")} />
 
-                <div>
+            <h2>Enter into Lobby</h2>
 
+            <TextField
+                id="outlined-basic"
+                label="Username"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                variant="outlined"
+                className={styles.UserInputField}
+                required
+                error={!username && submitted}
+                helperText={!username && submitted ? "Username is required" : ""}
+            />
 
-                    <h2>Enter into Lobby </h2>
-                    <TextField id="outlined-basic" label="Username" value={username} onChange={e => setUsername(e.target.value)} variant="outlined" />
-                    <Button variant="contained" onClick={connect}>Connect</Button>
+            <Button
+                variant="contained"
+                onClick={connect}
+                className={styles.UserConnectButton}
+            >
+                Connect
+            </Button>
 
+            <div className={styles.UserVideoContainer}>
+                <video ref={localVideoref} autoPlay muted className={styles.UserVideoElement}></video>
+            </div>
+            </div>
+             :
+                <div className={styles.meetVideoContainer}>
 
-                    <div>
-                        <video ref={localVideoref} autoPlay muted></video>
-                    </div>
+                    {showModal ? <div className={styles.chatRoom}>
 
-                </div> :
-
-
-                <div className="meetVideoContainer">
-
-                    {showModal ? <div className="chatRoom">
-
-                        <div className="chatContainer">
+                        <div className={styles.chatContainer}>
                             <h1>Chat</h1>
 
-                            <div className="chattingDisplay">
+                            <div className={styles.chattingDisplay}>
 
                                 {messages.length !== 0 ? messages.map((item, index) => {
 
@@ -499,7 +531,7 @@ export default function VideoMeetComponent() {
                     </div> : <></>}
 
 
-                    <div className="buttonContainers">
+                    <div className={styles.buttonContainers}>
                         <IconButton onClick={handleVideo} style={{ color: "white" }}>
                             {(video === true) ? <VideocamIcon /> : <VideocamOffIcon />}
                         </IconButton>
@@ -523,9 +555,9 @@ export default function VideoMeetComponent() {
                     </div>
 
 
-                    <video className="meetUserVideo" ref={localVideoref} autoPlay muted></video>
+                    <video className={styles.meetUserVideo} ref={localVideoref} autoPlay muted></video>
 
-                    <div className="conferenceView">
+                    <div className={styles.conferenceView}>
                         {videos.map((video) => (
                             <div key={video.socketId}>
                                 <video
