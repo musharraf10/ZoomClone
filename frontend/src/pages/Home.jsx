@@ -5,18 +5,30 @@ import "../App.css";
 import { Button, IconButton, TextField } from '@mui/material';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { AuthContext } from '../contexts/AuthContext';
-import { useState , useContext} from 'react';
+import { useState , useContext, useEffect} from 'react';
 
 function Home() {
 
     let navigate = useNavigate();
     const [meetingCode, setMeetingCode] = useState("");
-
+    let [username, setUsername] = useState("");
 
     const {addToUserHistory} = useContext(AuthContext);
+
+    useEffect(() => {
+        const storedUsername = localStorage.getItem("user");
+        if (storedUsername) {
+          // Set the username if it's found in localStorage
+          setUsername(storedUsername);
+        } else {
+          console.error("Username not found in localStorage.");
+        }
+      }, []);
+
+
     let handleJoinVideoCall = async () => {
         await addToUserHistory(meetingCode)
-        navigate(`/${meetingCode}`)
+        navigate(`/${meetingCode}`, {state:{username}})
     }
 
     // const heading = document.querySelector('.leftPanelInner');

@@ -15,10 +15,11 @@ import HomeIcon from '@mui/icons-material/Home';
 import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import server from '../environment';
+import fetchUsername from "../utils/userService.js";
 
 const server_url = server;
 
-const connections = {};
+let connections = {};
 
 const peerConfigConnections = {
     "iceServers": [
@@ -56,16 +57,17 @@ export default function VideoMeetComponent() {
 
     let [newMessages, setNewMessages] = useState(3);
 
-    let [askForUsername, setAskForUsername] = useState(false);
+    let [askForUsername, setAskForUsername] = useState(true);
 
     const location = useLocation();
 
-    let [username, setUsername] = useState("");
+    let [username, setUsername] = useState(location.state?.username || "");
 
     const videoRef = useRef([])
 
     let [videos, setVideos] = useState([]);
 
+    const name = fetchUsername();
     
      useEffect(() => {
             if (location.state?.askForUsername) {
@@ -224,7 +226,7 @@ export default function VideoMeetComponent() {
 
 
     let getDislayMediaSuccess = (stream) => {
-        console.log("HERE")
+        // console.log("HERE")
         try {
             window.localStream.getTracks().forEach(track => track.stop())
         } catch (e) { console.log(e) }
@@ -316,8 +318,8 @@ export default function VideoMeetComponent() {
 
                     // Wait for their video stream
                     connections[socketListId].onaddstream = (event) => {
-                        console.log("BEFORE:", videoRef.current);
-                        console.log("FINDING ID: ", socketListId);
+                        // console.log("BEFORE:", videoRef.current);
+                        // console.log("FINDING ID: ", socketListId);
 
                         let videoExists = videoRef.current.find(video => video.socketId === socketListId);
 
@@ -417,12 +419,36 @@ export default function VideoMeetComponent() {
 
     let handleEndCall = () => {
         try {
-            let tracks = localVideoref.current.srcObject.getTracks()
-            tracks.forEach(track => track.stop())
-        } catch (e) { }
+            // Stop all media tracks to release resources
+            let tracks = localVideoref.current.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+        } catch (e) {
+            console.log("Error stopping tracks:", e);
+        }
+    
+        // Clean up peer connections
+        for (let id in connections) {
+            if (connections[id]) {
+                connections[id].close();
+            }
+        }
+        connections = {};  // Clear the connections object
+    
+        // Disconnect from the socket server
+        if (socketRef.current) {
+            socketRef.current.removeAllListeners();
+            socketRef.current.disconnect();
+            socketRef.current = null;
+        }
+    
+        // Navigate to the home page after ending the call
         router("/home");
-    }
+    };
+    
 
+
+
+    
     let openChat = () => {
         setModal(true);
         setNewMessages(0);
@@ -482,6 +508,8 @@ export default function VideoMeetComponent() {
                             required
                             error={!username && submitted}
                             helperText={!username && submitted ? "Username is required" : ""}
+                            disabled={username === name} // Disable if username is not an empty string
+                            inputProps={{ readOnly: username.length >20}}
                         />
         
                         <Button

@@ -21,6 +21,8 @@ export const AuthProvider = ({ children }) => {
 
     const router = useNavigate();
 
+    
+
     const handleRegister = async (name, username, password) => {
         try {
             let request = await client.post("/register", {
@@ -45,11 +47,12 @@ export const AuthProvider = ({ children }) => {
                 password
             });
 
-            console.log(userName, password)
-            console.log(request.data)
+            // console.log(userName, password)
+            // console.log(request.data)
 
             if (request.status === httpStatus.OK) {
                 localStorage.setItem("token", request.data.token);
+                localStorage.setItem("user", userName);
                 router("/home")
             }
         } catch (err) {

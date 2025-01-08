@@ -3,3 +3,4 @@ export const performance = {
     maxEntrypointSize: 1000000, // Adjust max size for the entry point size warning
 };
   
+
