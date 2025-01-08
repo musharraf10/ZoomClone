@@ -549,6 +549,15 @@ export default function VideoMeetComponent() {
                     <div className={styles.videoGrid}>
                         <div className={styles.videoContainer}>
                             <video className={styles.meetUserVideo} ref={localVideoref} autoPlay muted></video>
+                            <span className={styles.youLabel}>You</span>
+                            <div className={styles.controlsContainer}>
+                                <IconButton onClick={handleVideo} style={{ color: "black" }}>
+                                    {video ? <VideocamIcon /> : <VideocamOffIcon />}
+                                </IconButton>
+                                <IconButton onClick={handleAudio} style={{ color: "black" }}>
+                                    {audio ? <MicIcon /> : <MicOffIcon />}
+                                </IconButton>
+                            </div>
                         </div>
                 
                         {/* Other Participant Videos */}
@@ -572,7 +581,7 @@ export default function VideoMeetComponent() {
                         <IconButton onClick={handleVideo} style={{ color: "black" }}>
                             {video ? <VideocamIcon /> : <VideocamOffIcon />}
                         </IconButton>
-                        <IconButton onClick={handleEndCall} style={{ color: "red" }}>
+                        <IconButton className={styles.endCallButton} onClick={handleEndCall} style={{ color: "red" }}>
                             <CallEndIcon />
                         </IconButton>
                         <IconButton onClick={handleAudio} style={{ color: "black" }}>
