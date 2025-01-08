@@ -56,7 +56,7 @@ export default function VideoMeetComponent() {
 
     let [newMessages, setNewMessages] = useState(3);
 
-    let [askForUsername, setAskForUsername] = useState(true);
+    let [askForUsername, setAskForUsername] = useState(false);
 
     const location = useLocation();
 
