@@ -14,10 +14,9 @@ import ChatIcon from '@mui/icons-material/Chat';
 import HomeIcon from '@mui/icons-material/Home';
 import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import server from '../environment';
 
-// import server from '../environment';
-
-const server_url = "http://localhost:8080";
+const server_url = server;
 
 const connections = {};
 
