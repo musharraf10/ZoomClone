@@ -29,7 +29,7 @@ app.use("/api/v1/user/", userRouter);
 
 const start = async () => {
     app.set("mongo_user")
-    const connectionDB = await mongoose.connect(process.env.MONGODB_URL)
+    const connectionDB = await mongoose.connect("mongodb+srv://skmusharaf01:Skmusharaf13@zoom.rmmsj.mongodb.net/myDatabase?retryWrites=true&w=majority")
     .then(() => console.log('MongoDB connected!'))
     .catch(err => console.log(err));
 
