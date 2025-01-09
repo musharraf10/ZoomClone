@@ -509,7 +509,7 @@ export default function VideoMeetComponent() {
                             error={!username && submitted}
                             helperText={!username && submitted ? "Username is required" : ""}
                             disabled={username === name} // Disable if username is not an empty string
-                            inputProps={{ readOnly: username.length >20}}
+                        
                         />
         
                         <Button
