@@ -47,7 +47,7 @@ export default function VideoMeetComponent() {
 
     let [screen, setScreen] = useState();
 
-    let [showModal, setModal] = useState(true);
+    let [showModal, setModal] = useState(false);
 
     let [screenAvailable, setScreenAvailable] = useState();
 
@@ -55,7 +55,7 @@ export default function VideoMeetComponent() {
 
     let [message, setMessage] = useState("");
 
-    let [newMessages, setNewMessages] = useState(3);
+    let [newMessages, setNewMessages] = useState(0);
 
     let [askForUsername, setAskForUsername] = useState(true);
 
@@ -132,6 +132,23 @@ export default function VideoMeetComponent() {
                         localVideoref.current.srcObject = userMediaStream;
                     }
                 }
+                  // Handle the 'beforeunload' event
+                  const handleBeforeUnload = (e) => {
+                    // Optionally show a confirmation message (in modern browsers, this may not work as intended)
+                    e.preventDefault();
+                    e.returnValue = '';
+                  };
+              
+                  // Handle the 'visibilitychange' event
+              
+                  window.addEventListener("beforeunload", handleBeforeUnload);
+                  document.addEventListener("visibilitychange", handleBeforeUnload);
+              
+                  return () => {
+                    // Cleanup event listeners and stop the video track on unmount
+                    window.removeEventListener("beforeunload", handleBeforeUnload);
+                    document.removeEventListener("visibilitychange", handleBeforeUnload);
+                  };
             }
         } catch (error) {
             console.log(error);
@@ -142,19 +159,17 @@ export default function VideoMeetComponent() {
         if (video !== undefined && audio !== undefined) {
             getUserMedia();
             console.log("SET STATE HAS ", video, audio);
-
         }
 
-
     }, [video, audio])
+
+
     let getMedia = () => {
         setVideo(videoAvailable);
         setAudio(audioAvailable);
         connectToSocketServer();
 
     }
-
-
 
 
     let getUserMediaSuccess = (stream) => {
@@ -399,10 +414,12 @@ export default function VideoMeetComponent() {
         return Object.assign(stream.getVideoTracks()[0], { enabled: false })
     }
 
+    
+
     let handleVideo = () => {
         setVideo(!video);
-        // getUserMedia();
-    }
+    };
+    
     let handleAudio = () => {
         setAudio(!audio)
         // getUserMedia();
@@ -417,6 +434,24 @@ export default function VideoMeetComponent() {
         setScreen(!screen);
     }
 
+    useEffect(() => {
+        const handleBackButton = () => {
+            let tracks = localVideoref.current.srcObject?.getTracks();
+            if (tracks) {
+                tracks.forEach(track => track.stop());
+            }
+        };
+
+        window.removeEventListener("beforeunload", handleBackButton);
+        document.removeEventListener("visibilitychange", handleBackButton);
+    
+        window.addEventListener("popstate", handleBackButton);
+    
+        return () => {
+            window.removeEventListener("popstate", handleBackButton);
+        };
+    }, []);
+    
     let handleEndCall = () => {
         try {
             // Stop all media tracks to release resources
@@ -440,22 +475,24 @@ export default function VideoMeetComponent() {
             socketRef.current.disconnect();
             socketRef.current = null;
         }
+            // Cleanup event listeners and stop the video track on unmount
     
         // Navigate to the home page after ending the call
         router("/home");
     };
     
-
-
-
     
-    let openChat = () => {
-        setModal(true);
-        setNewMessages(0);
-    }
-    let closeChat = () => {
-        setModal(false);
-    }
+    let toggleChat = () => {
+        if (showModal) {
+            // If the chat is open, close it
+            setModal(false);
+        } else {
+            // If the chat is closed, open it and reset newMessages
+            setModal(true);
+            setNewMessages(0);  // Reset new message count when chat is viewed
+        }
+    };
+    
     let handleMessage = (e) => {
         setMessage(e.target.value);
     }
@@ -622,7 +659,7 @@ export default function VideoMeetComponent() {
                         )}
                 
                         <Badge badgeContent={newMessages} max={999} color="primary">
-                            <IconButton onClick={() => setModal(!showModal)} style={{ color: "black" }}>
+                            <IconButton onClick={toggleChat}style={{ color: "black" }}>
                                 <ChatIcon />
                             </IconButton>
                         </Badge>

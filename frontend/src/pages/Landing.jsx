@@ -7,6 +7,8 @@ export default function Landing() {
 
     const router = useNavigate();
 
+    let token = localStorage.getItem('token');
+
     const [toggle, setToggle] = useState(false);
 
     const toggleMenu = () => {
@@ -25,15 +27,22 @@ export default function Landing() {
                   router("/GuestJoin", { state: { askForUsername: true } });
                   }}>Join as Guest</p>
 
+                  <p onClick={()=>{
+                    router("/home")
+                  }}>
+                    Home
+                  </p>
+                  {!token ?
+                   <>
                     <p onClick={() => {
                         router("/auth")
 
-                    }}>Register</p>
+                    }}>Register</p> 
                     
                     <p onClick={() => {
                         router("/auth")
 
-                    }}>Login</p>
+                    }}>Login</p></>:<></>}
                     
                 </div>
                 <button className="toggle-btn" onClick={toggleMenu}>
