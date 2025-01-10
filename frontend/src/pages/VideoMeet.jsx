@@ -10,7 +10,7 @@ import MicIcon from '@mui/icons-material/Mic'
 import MicOffIcon from '@mui/icons-material/MicOff'
 import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
-import CameraSwitchIcon from '@mui/icons-material/CameraSwitch';
+import FlipCameraIosIcon from '@mui/icons-material/FlipCameraIos';
 import ChatIcon from '@mui/icons-material/Chat';
 import HomeIcon from '@mui/icons-material/Home';
 import { useLocation } from 'react-router-dom';
@@ -720,7 +720,7 @@ export default function VideoMeetComponent() {
                                     {audio ? <MicIcon /> : <MicOffIcon />}
                                 </IconButton>
                                 <IconButton onClick={switchCamera} style={{ color: "black" }}>
-                                    <CameraSwitchIcon />
+                                    <FlipCameraIosIcon />
                                 </IconButton>
                             </div>
                         </div>
@@ -766,7 +766,7 @@ export default function VideoMeetComponent() {
                         </Badge>
 
                         <IconButton onClick={switchCamera} style={{ color: "black" }}>
-                            <CameraSwitchIcon />
+                            <FlipCameraIosIcon />
                         </IconButton>
                     </div>
                 </div>
