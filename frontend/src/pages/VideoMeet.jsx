@@ -10,6 +10,7 @@ import MicIcon from '@mui/icons-material/Mic'
 import MicOffIcon from '@mui/icons-material/MicOff'
 import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
+import CameraSwitchIcon from '@mui/icons-material/CameraSwitch';
 import ChatIcon from '@mui/icons-material/Chat';
 import HomeIcon from '@mui/icons-material/Home';
 import { useLocation } from 'react-router-dom';
@@ -68,7 +69,11 @@ export default function VideoMeetComponent() {
     let [videos, setVideos] = useState([]);
 
     const name = fetchUsername();
-    
+
+    const [isFrontCamera, setIsFrontCamera] = useState(true); 
+
+    const [visibilityTimer, setVisibilityTimer] = useState(null);
+
      useEffect(() => {
             if (location.state?.askForUsername) {
                 setAskForUsername(true);
@@ -78,14 +83,15 @@ export default function VideoMeetComponent() {
     // TODO
     // if(isChrome() === false) {
 
-
+    const INACTIVITY_LIMIT = 3 * 60 * 1000;
     // }
 
+   // Only run once when the component is mounted
     useEffect(() => {
-        console.log("HELLO")
+        console.log("HELLO");
         getPermissions();
+    }, []); // Add empty dependency array to run only once
 
-    })
 
     let getDislayMedia = () => {
         if (screen) {
@@ -158,7 +164,7 @@ export default function VideoMeetComponent() {
     useEffect(() => {
         if (video !== undefined && audio !== undefined) {
             getUserMedia();
-            console.log("SET STATE HAS ", video, audio);
+            // console.log("SET STATE HAS ", video, audio);
         }
 
     }, [video, audio])
@@ -281,26 +287,43 @@ export default function VideoMeetComponent() {
     }
 
     let gotMessageFromServer = (fromId, message) => {
-        var signal = JSON.parse(message)
-
-        if (fromId !== socketIdRef.current) {
-            if (signal.sdp) {
-                connections[fromId].setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(() => {
-                    if (signal.sdp.type === 'offer') {
-                        connections[fromId].createAnswer().then((description) => {
-                            connections[fromId].setLocalDescription(description).then(() => {
-                                socketRef.current.emit('signal', fromId, JSON.stringify({ 'sdp': connections[fromId].localDescription }))
-                            }).catch(e => console.log(e))
-                        }).catch(e => console.log(e))
-                    }
-                }).catch(e => console.log(e))
-            }
-
-            if (signal.ice) {
-                connections[fromId].addIceCandidate(new RTCIceCandidate(signal.ice)).catch(e => console.log(e))
-            }
+        const signal = JSON.parse(message);
+    
+        // Ensure the connection exists
+        if (!connections[fromId]) {
+            // Create a new RTCPeerConnection for the fromId if it doesn't exist
+            connections[fromId] = new RTCPeerConnection(peerConfigConnections);
         }
-    }
+    
+        const peerConnection = connections[fromId]; // Get the peer connection
+    
+        if (signal.sdp) {
+            // Check if the peer connection exists before setting the remote description
+            peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp))
+                .then(() => {
+                    if (signal.sdp.type === 'offer') {
+                        // If the signal is an offer, create an answer
+                        peerConnection.createAnswer()
+                            .then((description) => {
+                                peerConnection.setLocalDescription(description).then(() => {
+                                    socketRef.current.emit('signal', fromId, JSON.stringify({
+                                        'sdp': peerConnection.localDescription
+                                    }));
+                                }).catch(e => console.log("Error setting local description:", e));
+                            })
+                            .catch(e => console.log("Error creating answer:", e));
+                    }
+                })
+                .catch(e => console.log("Error setting remote description:", e));
+        }
+    
+        if (signal.ice) {
+            // Add ICE candidate if received
+            peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice))
+                .catch(e => console.log("Error adding ICE candidate:", e));
+        }
+    };
+    
 
 
 
@@ -317,8 +340,9 @@ export default function VideoMeetComponent() {
             socketRef.current.on('chat-message', addMessage)
 
             socketRef.current.on('user-left', (id) => {
-                setVideos((videos) => videos.filter((video) => video.socketId !== id))
-            })
+                setVideos((videos) => videos.filter((video) => video.socketId !== id));  // Remove the video from the state
+            });
+            
 
             socketRef.current.on('user-joined', (id, clients) => {
                 clients.forEach((socketListId) => {
@@ -414,6 +438,37 @@ export default function VideoMeetComponent() {
         return Object.assign(stream.getVideoTracks()[0], { enabled: false })
     }
 
+
+    const switchCamera = async () => {
+        // Stop current video tracks to free up the resources
+        let tracks = localVideoref.current.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+
+        // Switch between front and back camera by toggling 'facingMode'
+        const videoConstraints = {
+            video: {
+                facingMode: isFrontCamera ? 'environment' : 'user' // 'user' for front, 'environment' for back
+            }
+        };
+        console.log(videoConstraints.video.facingMode);
+
+        try {
+            // Get the media stream for the new camera
+            const newStream = await navigator.mediaDevices.getUserMedia(videoConstraints);
+
+            // Set the new stream as the video source
+            localVideoref.current.srcObject = newStream;
+
+            // Update the local stream if you're using it elsewhere in the app
+            window.localStream = newStream;
+
+            // Toggle the camera state
+            setIsFrontCamera(prevState => !prevState);
+        } catch (error) {
+            console.error("Error switching camera:", error);
+        }
+    };
+
     
 
     let handleVideo = () => {
@@ -451,12 +506,42 @@ export default function VideoMeetComponent() {
             window.removeEventListener("popstate", handleBackButton);
         };
     }, []);
+
+    useEffect(() => {
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                // User has left the page, start a 5-minute timer
+                const timer = setTimeout(() => {
+                    // Automatically end the call after 5 minutes of inactivity
+                    console.log("User inactive for 3 minutes. Ending call.");
+                    handleEndCall();
+                }, INACTIVITY_LIMIT);
+                setVisibilityTimer(timer);
+            } else {
+                // User has come back to the page, clear the timer
+                if (visibilityTimer) {
+                    clearTimeout(visibilityTimer);
+                    setVisibilityTimer(null);
+                }
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        // Cleanup event listener on component unmount
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [visibilityTimer]);
     
     let handleEndCall = () => {
         try {
             // Stop all media tracks to release resources
-            let tracks = localVideoref.current.srcObject.getTracks();
-            tracks.forEach(track => track.stop());
+            let tracks = localVideoref.current?.srcObject?.getTracks();
+            if (tracks) {
+                tracks.forEach(track => track.stop());
+            }
         } catch (e) {
             console.log("Error stopping tracks:", e);
         }
@@ -471,15 +556,16 @@ export default function VideoMeetComponent() {
     
         // Disconnect from the socket server
         if (socketRef.current) {
+            socketRef.current.off('chat-message', addMessage);
             socketRef.current.removeAllListeners();
             socketRef.current.disconnect();
-            socketRef.current = null;
+            // socketRef.current = null;
         }
-            // Cleanup event listeners and stop the video track on unmount
     
         // Navigate to the home page after ending the call
         router("/home");
     };
+    
     
     
     let toggleChat = () => {
@@ -497,25 +583,37 @@ export default function VideoMeetComponent() {
         setMessage(e.target.value);
     }
 
-    const addMessage = (data, sender, socketIdSender) => {
+    useEffect(() => {
+        // Connect to the socket server and listen for chat messages
+        socketRef.current = io.connect(server_url, { secure: false });
+
+        // Only add the 'chat-message' listener once
+        socketRef.current.on('chat-message', addMessage);
+
+        // Cleanup event listeners and disconnect socket on component unmount
+        return () => {
+            socketRef.current.off('chat-message', addMessage); // Remove the listener
+            socketRef.current.disconnect(); // Disconnect the socket
+        };
+    }, []);
+
+    const addMessage = (data, sender) => {
         setMessages((prevMessages) => [
             ...prevMessages,
-            { sender: sender, data: data }
+            { sender, data }
         ]);
-        if (socketIdSender !== socketIdRef.current) {
-            setNewMessages((prevNewMessages) => prevNewMessages + 1);
+        if (!showModal) {
+            setNewMessages((prevCount) => prevCount + 1);
         }
     };
 
-
-
-    let sendMessage = () => {
-        console.log(socketRef.current);
-        socketRef.current.emit('chat-message', message, username)
-        setMessage("");
-
-        // this.setState({ message: "", sender: username })
-    }
+    const sendMessage = () => {
+        if (message.trim()) {
+            // Emit the message to the server
+            socketRef.current.emit('chat-message', message, username); // Assuming the username is Musharaf
+            setMessage(""); // Clear the message input
+        }
+    };
 
     
     const [submitted, setSubmitted] = useState(true);
@@ -621,6 +719,9 @@ export default function VideoMeetComponent() {
                                 <IconButton onClick={handleAudio} style={{ color: "black" }}>
                                     {audio ? <MicIcon /> : <MicOffIcon />}
                                 </IconButton>
+                                <IconButton onClick={switchCamera} style={{ color: "black" }}>
+                                    <CameraSwitchIcon />
+                                </IconButton>
                             </div>
                         </div>
                 
@@ -663,6 +764,10 @@ export default function VideoMeetComponent() {
                                 <ChatIcon />
                             </IconButton>
                         </Badge>
+
+                        <IconButton onClick={switchCamera} style={{ color: "black" }}>
+                            <CameraSwitchIcon />
+                        </IconButton>
                     </div>
                 </div>
                 
