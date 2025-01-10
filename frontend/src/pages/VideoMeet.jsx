@@ -88,7 +88,6 @@ export default function VideoMeetComponent() {
 
    // Only run once when the component is mounted
     useEffect(() => {
-        console.log("HELLO");
         getPermissions();
     }, []); // Add empty dependency array to run only once
 
@@ -643,7 +642,7 @@ export default function VideoMeetComponent() {
                             required
                             error={!username && submitted}
                             helperText={!username && submitted ? "Username is required" : ""}
-                            disabled={username === name} // Disable if username is not an empty string
+                            disabled={username === name && name !== '' && username !== ''} // Disable if username is not an empty string
                         
                         />
         

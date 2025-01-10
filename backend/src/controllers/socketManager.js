@@ -18,9 +18,6 @@ export const connectToSocket = server => {
 
     io.on("connection", (socket) => {
 
-
-        console.log("Something connected");
-
         socket.on("join-call", (path) => {
 
             if(connections[path] === undefined){
@@ -68,7 +65,7 @@ export const connectToSocket = server => {
                     messages[matchingRoom] = [];
                 }
                 messages[matchingRoom].push({ "sender": sender, "data": data, "socket-id-sender" : socket.id });
-                console.log("message", matchingRoom , ":", sender, ":", data);
+                // console.log("message", matchingRoom , ":", sender, ":", data);
 
                 connections[matchingRoom].forEach(elem => {
                     io.to(elem).emit("chat-message", data, sender, socket.id);
