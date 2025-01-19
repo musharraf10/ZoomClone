@@ -53,9 +53,9 @@ export default function Landing() {
 
             <div className="landingMainContainer">
                 <div>
-                    <h1><span style={{ color: "#FF9839" }}>Connect</span> with your loved Ones</h1>
+                    <h1><span style={{ color: "#FF9839" }}>Connect</span> with your loved Ones💕</h1>
 
-                    <p>Cover a distance by 2085 Video Call</p>
+                    <p>Cover a distance by Shaik's Video Call</p>
                     <div role='button'>
                         <Link to={"/auth"}>Get Started</Link>
                     </div>
