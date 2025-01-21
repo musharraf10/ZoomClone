@@ -6,6 +6,7 @@ import { Button, IconButton, TextField } from '@mui/material';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { AuthContext } from '../contexts/AuthContext';
 import { useState , useContext, useEffect} from 'react';
+import '../utils/Background';
 
 function Home() {
 

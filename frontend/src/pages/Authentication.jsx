@@ -11,6 +11,8 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { AuthContext } from '../contexts/AuthContext';
 import { Snackbar, Alert } from '@mui/material';
 import getRandomImage from '../utils/RandomImage.jsx';
+// import '../utils/Background';
+
 
 
 const defaultTheme = createTheme();

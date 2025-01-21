@@ -2,6 +2,7 @@ import React from "react";
 import "../App.css";
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from "react";
+import '../utils/Background';
 
 export default function Landing() {
 

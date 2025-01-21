@@ -11,7 +11,7 @@ import IconButton from '@mui/material/IconButton';
 import CircularProgress from '@mui/material/CircularProgress';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-
+import '../utils/Background';
 export default function History() {
   const { getHistoryOfUser } = useContext(AuthContext);
   const [meetings, setMeetings] = useState([]);

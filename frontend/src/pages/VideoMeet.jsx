@@ -17,6 +17,7 @@ import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import server from '../environment';
 import fetchUsername from "../utils/userService.js";
+import '../utils/Background';
 
 const server_url = server;
 
